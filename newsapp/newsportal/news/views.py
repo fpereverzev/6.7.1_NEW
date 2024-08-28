@@ -4,8 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from .models import Category, Subscriber
 from django.contrib import messages
-from .tasks import send_notification
-from .models import News
 
 
 def create_article(request):
@@ -18,7 +16,6 @@ def create_article(request):
         form = ArticleForm()
     return render(request, 'news/create_article.html', {'form': form})
 
-
 def create_post(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
@@ -28,7 +25,6 @@ def create_post(request):
     else:
         form = PostForm()
     return render(request, 'news/create_post.html', {'form': form})
-
 
 @login_required
 def manage_subscription(request):
@@ -43,12 +39,4 @@ def manage_subscription(request):
         return redirect('news:subscriptions')
 
     user_subscriptions = Subscriber.objects.filter(user=request.user).values_list('category_id', flat=True)
-    return render(request, 'news/subscriptions.html',
-                  {'categories': categories, 'user_subscriptions': user_subscriptions})
-
-def create_news(request):
-    # Создание новости
-    news = News.objects.create(title="Заголовок", content="Содержание")
-
-    # Вызов задачи Celery
-    send_notification.delay(news.id)
+    return render(request, 'news/subscriptions.html', {'categories': categories, 'user_subscriptions': user_subscriptions})
